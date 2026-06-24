@@ -6,6 +6,14 @@ import { fileURLToPath } from "node:url";
 import { getDb, getDbPath } from "../src/db.js";
 import type { Statute, Provision, SearchResult } from "../src/types.js";
 
+function fixSpacing(text: string): string {
+  return text
+    .replace(/([^\s])(को|का|की|मा|ले|बाट|सँग|लाई|हरू|सम्म|भन्दा|तथा|र |वा )/g, "$1 $2")
+    .replace(/([।,;:])([^\s])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -61,7 +69,7 @@ app.get("/api/search", (req, res) => {
         if (!results.some(x => x.statute_id === r.statute_id)) {
           results.push({
             statute_id: r.statute_id, title_np: r.title_np, title_en: r.title_en,
-            snippet: r.snippet, rank: 0, quality: r.quality,
+            snippet: fixSpacing(r.snippet), rank: 0, quality: r.quality,
           });
         }
       }
@@ -109,7 +117,7 @@ app.get("/api/search", (req, res) => {
       try {
         const prov = db.prepare(snippetSql).get(r.id, ...snippetParams) as { text: string; section_title: string } | undefined;
         if (prov) {
-          snippet = prov.text || prov.section_title || "";
+          snippet = fixSpacing(prov.text || prov.section_title || "");
           if (snippet.length > 200) {
             const idx = snippet.indexOf(words[0]);
             if (idx !== -1) {
@@ -164,7 +172,7 @@ app.get("/api/acts/:id", (req, res) => {
     if (!act) return res.status(404).json({ error: "Act not found" });
 
     const provisions = db.prepare("SELECT * FROM provisions WHERE statute_id = ? ORDER BY id").all(id) as Provision[];
-    res.json({ ...act, provisions });
+    res.json({ ...act, provisions: provisions.map(p => ({ ...p, text: fixSpacing(p.text) })) });
   } catch (err) {
     console.error("Get act error:", err);
     res.status(500).json({ error: "Failed to get act" });
@@ -183,7 +191,7 @@ app.get("/api/acts/:id/provisions/:section", (req, res) => {
       "SELECT p.*, s.title_np AS act_title FROM provisions p JOIN statutes s ON s.id = p.statute_id WHERE p.statute_id = ? AND p.section_number = ? LIMIT 1"
     ).get(id, req.params.section) as (Provision & { act_title: string }) | undefined;
     if (!provision) return res.status(404).json({ error: "Section not found" });
-    res.json(provision);
+    res.json({ ...provision, text: fixSpacing(provision.text) });
   } catch (err) {
     console.error("Get provision error:", err);
     res.status(500).json({ error: "Failed to get provision" });

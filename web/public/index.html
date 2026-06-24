@@ -181,10 +181,7 @@ function showAct(id) {
         html += '<div class="empty">यस ऐनको पाठ उपलब्ध छैन।</div>';
       } else {
         for (const p of act.provisions) {
-          const sec = p.section_number ? p.section_number + ". " : "";
-          const title = p.section_title ? p.section_title : "";
           html += `<div class="provision">
-            <div class="section-title">${sec}${title}</div>
             <div class="section-text">${escapeHtml(p.text)}</div>
           </div>`;
         }
