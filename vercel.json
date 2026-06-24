@@ -9,7 +9,12 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "web/server.ts"
+      "dest": "/web/server.ts"
     }
-  ]
+  ],
+  "functions": {
+    "web/server.ts": {
+      "maxDuration": 10
+    }
+  }
 }

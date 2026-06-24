@@ -3,7 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Statute, Provision, SearchResult, NewStatute } from "./types.js";
 
-const DB_PATH = path.join(process.cwd(), "data", "nepal-law.db");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DB_PATH = path.join(__dirname, "..", "..", "data", "nepal-law.db");
 
 let db: Database.Database;
 
