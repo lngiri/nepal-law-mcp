@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { getDb } from "../src/db.js";
 import type { Statute, Provision, SearchResult } from "../src/types.js";
@@ -19,9 +20,12 @@ app.use(express.static(path.join(__dirname, "public")));
 
 function getDbSafe() {
   try {
-    return getDb();
-  } catch {
-    console.error("Database not available");
+    const d = getDb();
+    // Quick test query to verify DB is actually functional
+    d.prepare("SELECT 1").get();
+    return d;
+  } catch (e: any) {
+    console.error("Database error:", e?.message || e);
     return null;
   }
 }
@@ -184,6 +188,19 @@ app.get("/api/acts/:id/provisions/:section", (req, res) => {
     console.error("Get provision error:", err);
     res.status(500).json({ error: "Failed to get provision" });
   }
+});
+
+app.get("/api/debug", (_req, res) => {
+  const cwd = process.cwd();
+  const check = (base: string) => {
+    const f = path.join(base, "data", "nepal-law.db");
+    try { return { base, db: fs.existsSync(f), dataDir: fs.existsSync(path.join(base, "data")), cwd }; } catch { return { base, error: true }; }
+  };
+  res.json({
+    cwd,
+    vercel: !!process.env.VERCEL,
+    checks: [check(cwd), check("/var/task"), check(path.join(__dirname, "..", "..")), check(path.join(__dirname, ".."))],
+  });
 });
 
 app.get("/api/stats", (_req, res) => {
