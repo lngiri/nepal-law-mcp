@@ -3,7 +3,7 @@ import cors from "cors";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { getDb, DB_PATH } from "../src/db.js";
+import { getDb, getDbPath } from "../src/db.js";
 import type { Statute, Provision, SearchResult } from "../src/types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -205,7 +205,7 @@ app.get("/api/debug", (_req, res) => {
   }
   res.json({
     cwd,
-    dbPath: DB_PATH,
+    dbPath: getDbPath(),
     vercel: !!process.env.VERCEL,
     dbError,
     checks: [check(cwd), check("/var/task"), check(path.join(__dirname, "..", "..")), check(path.join(__dirname, ".."))],

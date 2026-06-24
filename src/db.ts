@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import path from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, copyFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { Statute, Provision, SearchResult, NewStatute } from "./types.js";
 
@@ -14,22 +14,30 @@ const possiblePaths = [
   "/var/task/data/nepal-law.db",
 ];
 
-export const DB_PATH = possiblePaths.find((p) => existsSync(p));
-if (!DB_PATH) {
-  console.error("DB not found at any path:", possiblePaths);
-  throw new Error("Database file not found");
-}
+export const DB_PATH_SRC = possiblePaths.find((p) => existsSync(p));
 
 const isVercel = !!process.env.VERCEL;
+
+// On Vercel, copy DB to /tmp so SQLite can write its lock/WAL files
+export function getDbPath(): string {
+  if (!DB_PATH_SRC) throw new Error("Database file not found at any path: " + possiblePaths.join(", "));
+  if (isVercel) {
+    const tmpPath = path.join("/tmp", "nepal-law.db");
+    if (!existsSync(tmpPath)) {
+      copyFileSync(DB_PATH_SRC, tmpPath);
+    }
+    return tmpPath;
+  }
+  return DB_PATH_SRC;
+}
 
 let db: Database.Database;
 
 export function getDb(): Database.Database {
   if (!db) {
-    if (isVercel) {
-      db = new Database(DB_PATH, { readonly: true, fileMustExist: true });
-    } else {
-      db = new Database(DB_PATH);
+    const dbPath = getDbPath();
+    db = new Database(dbPath, isVercel ? { readonly: true, fileMustExist: true } : {});
+    if (!isVercel) {
       db.pragma("journal_mode = WAL");
       db.pragma("foreign_keys = ON");
       initializeSchema(db);
