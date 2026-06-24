@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>नेपाल कानून खोज</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:'Noto Sans Devanagari','Nirmala UI','Mangal',sans-serif}
+html{font-size:16px}
+body{background:#f5f0eb;color:#222;min-height:100vh;display:flex;flex-direction:column}
+a{color:#8B0000;text-decoration:none}
+a:hover{text-decoration:underline}
+header{background:#8B0000;color:#fff;padding:1.5rem 1rem;text-align:center}
+header h1{font-size:1.8rem;font-weight:700;margin-bottom:0.25rem}
+header p{font-size:0.95rem;opacity:0.9}
+.container{max-width:960px;margin:0 auto;padding:1rem;width:100%;flex:1}
+.search-box{display:flex;gap:0.5rem;margin:1.5rem 0}
+.search-box input{flex:1;padding:0.85rem 1rem;font-size:1.1rem;border:2px solid #ddd;border-radius:8px;outline:none;transition:border-color 0.2s}
+.search-box input:focus{border-color:#8B0000}
+.search-box input::placeholder{color:#999}
+.btn{display:inline-flex;align-items:center;gap:0.4rem;padding:0.7rem 1.2rem;font-size:1rem;border:none;border-radius:8px;cursor:pointer;transition:background 0.2s;white-space:nowrap}
+.btn-primary{background:#8B0000;color:#fff}
+.btn-primary:hover{background:#a00000}
+.btn-secondary{background:#e8e0d8;color:#333}
+.btn-secondary:hover{background:#ddd}
+.btn-small{padding:0.4rem 0.8rem;font-size:0.85rem}
+.actions{display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.5rem;justify-content:center}
+.stats-bar{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;font-size:0.9rem;color:#666}
+.stats-bar span{background:#fff;padding:0.5rem 1rem;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.results,.act-list{display:flex;flex-direction:column;gap:0.75rem}
+.result-card,.act-card{background:#fff;border-radius:8px;padding:1rem;box-shadow:0 1px 4px rgba(0,0,0,0.1);cursor:pointer;transition:box-shadow 0.2s}
+.result-card:hover,.act-card:hover{box-shadow:0 2px 8px rgba(139,0,0,0.15)}
+.result-card h3,.act-card h3{font-size:1rem;color:#8B0000;margin-bottom:0.3rem}
+.result-card .year{font-size:0.8rem;color:#888}
+.result-card .snippet{font-size:0.9rem;color:#444;margin-top:0.3rem;line-height:1.5}
+.result-card .snippet mark{background:#ffe082;color:#222;padding:0 2px;border-radius:2px}
+.quality-badge{display:inline-block;font-size:0.75rem;padding:0.15rem 0.5rem;border-radius:4px;font-weight:600}
+.quality-verified{background:#e6f4e6;color:#2e7d32}
+.quality-low{background:#fff3e0;color:#e65100}
+.quality-unprocessed{background:#f5f5f5;color:#999}
+.quality-error{background:#ffebee;color:#c62828}
+.act-detail{background:#fff;border-radius:8px;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+.act-detail h2{color:#8B0000;font-size:1.4rem;margin-bottom:0.3rem}
+.act-detail .meta{font-size:0.9rem;color:#666;margin-bottom:1rem;display:flex;gap:1rem;flex-wrap:wrap}
+.provision{padding:0.75rem 0;border-bottom:1px solid #eee}
+.provision:last-child{border-bottom:none}
+.provision .section-title{font-weight:600;color:#333;margin-bottom:0.2rem}
+.provision .section-text{font-size:0.95rem;color:#444;line-height:1.7;white-space:pre-wrap}
+.back-link{display:inline-block;margin-bottom:1rem;color:#8B0000;cursor:pointer;font-weight:600}
+.back-link:hover{text-decoration:underline}
+.spinner{text-align:center;padding:2rem;color:#888}
+.spinner::after{content:"";display:inline-block;width:24px;height:24px;border:3px solid #ddd;border-top:3px solid #8B0000;border-radius:50%;animation:spin 0.8s linear infinite;margin-left:0.5rem;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:2rem;color:#888;font-size:1rem}
+footer{text-align:center;padding:1.5rem;color:#888;font-size:0.8rem;border-top:1px solid #e0d8d0;margin-top:1.5rem}
+@media(max-width:600px){
+  header h1{font-size:1.4rem}
+  .search-box{flex-direction:column}
+  .actions{flex-direction:column;align-items:stretch}
+  .btn{justify-content:center}
+  .act-detail{padding:1rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>नेपाल कानून खोज</h1>
+  <p>नेपाल कानून आयोगबाट प्रकाशित सबै ऐनहरूको खोज तथा पाठ</p>
+</header>
+
+<div class="container" id="app">
+  <div class="stats-bar" id="statsBar"></div>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="ऐन खोज्नुहोस्... (जस्तै: श्रमिक, कर, शिक्षा)" autofocus>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="showAllActs()">सबै ऐनहरू</button>
+    <button class="btn btn-secondary" onclick="clearSearch()">खोज सफा गर्नुहोस्</button>
+  </div>
+
+  <div id="content">
+    <div class="empty">माथिको खोज बक्समा टाइप गर्नुहोस् वा सबै ऐनहरू हेर्नुहोस्</div>
+  </div>
+</div>
+
+<footer>
+  नेपाल कानून खोज v1.0 &mdash; नेपाल कानून आयोगको डाटाबेसमा आधारित
+</footer>
+
+<script>
+const searchInput = document.getElementById("searchInput");
+const content = document.getElementById("content");
+const statsBar = document.getElementById("statsBar");
+let debounceTimer = null;
+let currentView = "search";
+
+// Load stats on startup
+fetch("/api/stats")
+  .then(r => r.json())
+  .then(s => {
+    statsBar.innerHTML = `
+      <span>📚 ${s.totalActs} ऐनहरू</span>
+      <span>📄 ${s.totalProvisions} दफाहरू</span>
+      <span>✅ ${s.verified} प्रमाणित</span>
+      <span>🔍 ${s.withProvisions} ऐनमा पाठ</span>
+    `;
+  })
+  .catch(() => {});
+
+searchInput.addEventListener("input", () => {
+  clearTimeout(debounceTimer);
+  const q = searchInput.value.trim();
+  if (q.length < 1) {
+    content.innerHTML = '<div class="empty">माथिको खोज बक्समा टाइप गर्नुहोस् वा सबै ऐनहरू हेर्नुहोस्</div>';
+    return;
+  }
+  debounceTimer = setTimeout(() => doSearch(q), 300);
+});
+
+function doSearch(q) {
+  currentView = "search";
+  content.innerHTML = '<div class="spinner">खोज्दै...</div>';
+  fetch(`/api/search?q=${encodeURIComponent(q)}&limit=20`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.results || data.results.length === 0) {
+        content.innerHTML = `<div class="empty">"${q}" को लागि कुनै परिणाम फेला परेन</div>`;
+        return;
+      }
+      let html = `<div class="results"><p style="color:#666;margin-bottom:0.5rem">${data.results.length} परिणाम(हरू) फेला पर्यो</p>`;
+      for (const r of data.results) {
+        const qualityClass = r.quality === "verified" ? "quality-verified" : r.quality === "low_confidence" ? "quality-low" : r.quality === "error" ? "quality-error" : "quality-unprocessed";
+        const qualityLabel = r.quality === "verified" ? "प्रमाणित" : r.quality === "low_confidence" ? "कम गुणस्तर" : r.quality === "error" ? "त्रुटि" : "अप्रशोधित";
+        html += `<div class="result-card" onclick="showAct(${r.statute_id})">
+          <h3>${r.title_np}</h3>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+            <span class="year">${r.title_en}</span>
+            <span class="quality-badge ${qualityClass}">${qualityLabel}</span>
+          </div>
+          <div class="snippet">${r.snippet}</div>
+        </div>`;
+      }
+      html += "</div>";
+      content.innerHTML = html;
+    })
+    .catch(() => {
+      content.innerHTML = '<div class="empty">खोज गर्दा त्रुटि भयो। कृपया पुन: प्रयास गर्नुहोस्।</div>';
+    });
+}
+
+function showAct(id) {
+  currentView = "act";
+  content.innerHTML = '<div class="spinner">लोड गर्दै...</div>';
+  fetch(`/api/acts/${id}`)
+    .then(r => r.json())
+    .then(act => {
+      if (act.error) {
+        content.innerHTML = `<div class="empty">${act.error}</div>`;
+        return;
+      }
+      const qualityClass = act.quality === "verified" ? "quality-verified" : act.quality === "low_confidence" ? "quality-low" : act.quality === "error" ? "quality-error" : "quality-unprocessed";
+      const qualityLabel = act.quality === "verified" ? "प्रमाणित" : act.quality === "low_confidence" ? "कम गुणस्तर" : act.quality === "error" ? "त्रुटि" : "अप्रशोधित";
+      const statusLabel = act.status === "in_force" ? "प्रचलित" : act.status === "repealed" ? "खारेज" : "अज्ञात";
+
+      let html = `<div class="act-detail">
+        <span class="back-link" onclick="showAllActs()">← सबै ऐनहरूमा फर्कनुहोस्</span>
+        <h2>${act.title_np}</h2>
+        <div class="meta">
+          <span>${act.title_en}</span>
+          <span>वर्ष: ${act.year || "—"}</span>
+          <span class="quality-badge ${qualityClass}">${qualityLabel}</span>
+          <span>स्थिति: ${statusLabel}</span>
+          <span>${act.provisions.length} दफाहरू</span>
+        </div>`;
+
+      if (act.provisions.length === 0) {
+        html += '<div class="empty">यस ऐनको पाठ उपलब्ध छैन।</div>';
+      } else {
+        for (const p of act.provisions) {
+          const sec = p.section_number ? p.section_number + ". " : "";
+          const title = p.section_title ? p.section_title : "";
+          html += `<div class="provision">
+            <div class="section-title">${sec}${title}</div>
+            <div class="section-text">${escapeHtml(p.text)}</div>
+          </div>`;
+        }
+      }
+      html += "</div>";
+      content.innerHTML = html;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    })
+    .catch(() => {
+      content.innerHTML = '<div class="empty">डाटा लोड गर्दा त्रुटि भयो।</div>';
+    });
+}
+
+function showAllActs() {
+  currentView = "list";
+  content.innerHTML = '<div class="spinner">लोड गर्दै...</div>';
+  fetch("/api/acts")
+    .then(r => r.json())
+    .then(acts => {
+      if (!acts || acts.length === 0) {
+        content.innerHTML = '<div class="empty">कुनै ऐन फेला परेनन्।</div>';
+        return;
+      }
+      let html = `<div class="act-list"><p style="color:#666;margin-bottom:0.5rem">सबै ${acts.length} ऐनहरू</p>`;
+      for (const a of acts) {
+        const qualityClass = a.quality === "verified" ? "quality-verified" : a.quality === "low_confidence" ? "quality-low" : a.quality === "error" ? "quality-error" : "quality-unprocessed";
+        const qualityLabel = a.quality === "verified" ? "प्रमाणित" : a.quality === "low_confidence" ? "कम गुणस्तर" : a.quality === "error" ? "त्रुटि" : "अप्रशोधित";
+        html += `<div class="act-card" onclick="showAct(${a.id})">
+          <h3>${a.title_np}</h3>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+            <span class="year">${a.year ? "वर्ष " + a.year : ""}</span>
+            <span class="quality-badge ${qualityClass}">${qualityLabel}</span>
+            <span style="font-size:0.8rem;color:#888">${a.provision_count} दफा</span>
+          </div>
+        </div>`;
+      }
+      html += "</div>";
+      content.innerHTML = html;
+    })
+    .catch(() => {
+      content.innerHTML = '<div class="empty">डाटा लोड गर्दा त्रुटि भयो।</div>';
+    });
+}
+
+function clearSearch() {
+  searchInput.value = "";
+  if (currentView === "search") {
+    content.innerHTML = '<div class="empty">माथिको खोज बक्समा टाइप गर्नुहोस् वा सबै ऐनहरू हेर्नुहोस्</div>';
+  }
+}
+
+function escapeHtml(t) {
+  const d = document.createElement("div");
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+// Initial load: show stats
+</script>
+</body>
+</html>

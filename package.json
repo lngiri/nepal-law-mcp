@@ -1,0 +1,36 @@
+{
+  "name": "nepal-law-mcp",
+  "version": "1.0.0",
+  "description": "MCP server providing search access to Nepali statutes from lawcommission.gov.np",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && node -e \"fs.cpSync('web/public','dist/web/public',{recursive:true})\"",
+    "start": "node dist/index.js",
+    "ingest": "node dist/scripts/ingest.js",
+    "parse-pdfs": "node dist/scripts/parse-pdfs.js",
+    "web": "node dist/web/server.js",
+    "web:dev": "npx tsx web/server.ts",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "better-sqlite3": "^11.7.0",
+    "canvas": "^3.2.3",
+    "cheerio": "^1.0.0",
+    "pdf-parse": "^2.4.5",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

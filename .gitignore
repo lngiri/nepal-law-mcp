@@ -1,0 +1,20 @@
+node_modules/
+dist/
+*.log
+.env
+tmp/
+# Temp/debug scripts
+_*.mjs
+_*.png
+_*.jpg
+nep.traineddata
+temp_pages/
+tessdata/
+# Stray debug scripts in root
+inspect_provs.mjs
+query_pdfjs.mjs
+# SQLite WAL files
+*.db-shm
+*.db-wal
+data/page-*.png
+
