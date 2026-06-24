@@ -11,10 +11,5 @@
       "src": "/(.*)",
       "dest": "/web/server.ts"
     }
-  ],
-  "functions": {
-    "web/server.ts": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }
