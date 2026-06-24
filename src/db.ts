@@ -1,19 +1,39 @@
 import Database from "better-sqlite3";
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { Statute, Provision, SearchResult, NewStatute } from "./types.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, "..", "..", "data", "nepal-law.db");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const possiblePaths = [
+  path.join(__dirname, "..", "..", "data", "nepal-law.db"),
+  path.join(__dirname, "..", "data", "nepal-law.db"),
+  path.join(process.cwd(), "data", "nepal-law.db"),
+  "/var/task/data/nepal-law.db",
+];
+
+const DB_PATH = possiblePaths.find((p) => existsSync(p));
+if (!DB_PATH) {
+  console.error("DB not found at any path:", possiblePaths);
+  throw new Error("Database file not found");
+}
+
+const isVercel = !!process.env.VERCEL;
 
 let db: Database.Database;
 
 export function getDb(): Database.Database {
   if (!db) {
-    db = new Database(DB_PATH);
-    db.pragma("journal_mode = WAL");
-    db.pragma("foreign_keys = ON");
-    initializeSchema(db);
+    if (isVercel) {
+      db = new Database(DB_PATH, { readonly: true, fileMustExist: true });
+    } else {
+      db = new Database(DB_PATH);
+      db.pragma("journal_mode = WAL");
+      db.pragma("foreign_keys = ON");
+      initializeSchema(db);
+    }
   }
   return db;
 }

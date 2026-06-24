@@ -207,6 +207,12 @@ app.use((_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Error handling middleware
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("API Error:", err);
+  res.status(500).json({ error: err?.message || "Internal server error" });
+});
+
 app.listen(PORT, () => {
   console.error(`[nepal-law-web] Server running at http://localhost:${PORT}`);
   console.error(`[nepal-law-web] API: http://localhost:${PORT}/api/acts`);
