@@ -1,5 +1,10 @@
 # nepal-law-mcp
 
+## 🌐 Live Demo
+**https://nepal-law-mcp.vercel.app/**
+
+नेपाल कानून आयोगबाट प्रकाशित ३२८ वटा ऐनहरू र ३,४२४ वटा धाराहरू खोज्न मिल्ने tool।
+
 An MCP (Model Context Protocol) server with a web interface that provides search access to Nepali statutes scraped from [lawcommission.gov.np](https://lawcommission.gov.np). Includes a full PDF parsing pipeline with OCR fallback for section-level text extraction.
 
 ## Features
