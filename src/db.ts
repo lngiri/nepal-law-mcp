@@ -14,7 +14,7 @@ const possiblePaths = [
   "/var/task/data/nepal-law.db",
 ];
 
-const DB_PATH = possiblePaths.find((p) => existsSync(p));
+export const DB_PATH = possiblePaths.find((p) => existsSync(p));
 if (!DB_PATH) {
   console.error("DB not found at any path:", possiblePaths);
   throw new Error("Database file not found");

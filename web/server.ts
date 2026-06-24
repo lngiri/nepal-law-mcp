@@ -3,7 +3,7 @@ import cors from "cors";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { getDb } from "../src/db.js";
+import { getDb, DB_PATH } from "../src/db.js";
 import type { Statute, Provision, SearchResult } from "../src/types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -196,9 +196,18 @@ app.get("/api/debug", (_req, res) => {
     const f = path.join(base, "data", "nepal-law.db");
     try { return { base, db: fs.existsSync(f), dataDir: fs.existsSync(path.join(base, "data")), cwd }; } catch { return { base, error: true }; }
   };
+  let dbError: string | null = null;
+  try {
+    const d = getDb();
+    d.prepare("SELECT 1").get();
+  } catch (e: any) {
+    dbError = e?.message || String(e);
+  }
   res.json({
     cwd,
+    dbPath: DB_PATH,
     vercel: !!process.env.VERCEL,
+    dbError,
     checks: [check(cwd), check("/var/task"), check(path.join(__dirname, "..", "..")), check(path.join(__dirname, ".."))],
   });
 });
