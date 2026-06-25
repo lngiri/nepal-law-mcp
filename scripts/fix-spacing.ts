@@ -9,7 +9,7 @@ const API_URL = process.env.API_URL ?? "https://generativelanguage.googleapis.co
 const skipFilters = process.argv.includes("--all");
 
 const updateStmt = db.prepare("UPDATE provisions SET text = ? WHERE id = ?");
-const DELAY_MS = 5000;
+const DELAY_MS = 60_000;
 const PROGRESS_INTERVAL = 50;
 
 // Heuristics to detect tariff/schedule tables (skip these — AI would corrupt numbers)
@@ -62,12 +62,13 @@ Text: ${text}`,
       process.exit(1);
     }
     if (response.status === 429) {
-      if (retryCount >= 1) {
-        console.error("\n❌ Rate limited twice consecutively. Aborting.");
+      if (retryCount >= 2) {
+        console.error("\n❌ Rate limited 3 times consecutively. Aborting.");
         process.exit(1);
       }
-      console.error("\n⚠️  Rate limited. Waiting 60s before retry...");
-      await new Promise((r) => setTimeout(r, 60000));
+      const wait = 120_000;
+      console.error(`\n⚠️  Rate limited. Waiting ${wait / 1000}s before retry...`);
+      await new Promise((r) => setTimeout(r, wait));
       return fixText(text, retryCount + 1);
     }
     if (response.status === 503) {
